@@ -7,14 +7,10 @@ const { json, urlencoded } = require("body-parser");
 const { User } = require("./models/user.model");
 const { genSalt, hash, compare } = require("bcrypt");
 const { authenticateToken, isLoggedOut } = require("./middlewares/auth.middleware");
+const nodemailer = require("nodemailer");
 
 // Declarations
 const app = express();
-
-console.log("process host = ", process.env.HOST);
-console.log("process port = ", process.env.PORT);
-console.log("process database connection string = ", process.env.DB_CONNECTION_STRING);
-console.log("process secret key = ", process.env.SECRET_KEY);
 
 // server start
 (async () => {
@@ -210,7 +206,68 @@ app.post("/api/v1/auth/logout", async (req, res, next) => {
     }
 });
 app.post("/api/v1/auth/forgot-password", async(req, res, next) => {
+    // check if user email exist in request payload
+    // if email exist and if email is found in database then generate jwt token 
+    // Set jwt token payload with user email, type of token and short expiration time
+    // send a email to user with custom link for resetting password with token in link route path parameter 
+    let foundUser = null;
+    let { email } = req.body;
 
+    if(!email) return res.status(300).send({
+        message: "no email received",
+    })
+    
+    foundUser = await User.findOne({email: email});
+
+    if(!foundUser) return res.status(200).send({
+        message: "If the account exist, a password reset email will be sent."
+    });
+
+    let resetToken =  sign({
+        email: foundUser.email,
+        id: foundUser.id,
+        type: "passwordToken",
+    }, process.env.SECRET_KEY, {expiresIn: "5m"});
+
+    // configuration object for mailer sender object
+    let transport = {
+        host: process.env.TRANSPORT_HOST,
+        port: process.env.TRANSPORT_PORT,
+        auth: {
+            user: process.env.TRANSPORT_AUTH_USER,
+            pass: process.env.TRANSPORT_AUTH_PASS,
+        }
+    }
+
+    let transporter = nodemailer.createTransport(transport);
+
+    let message = {
+        from: process.env.MESSAGE_FROM,
+        to: foundUser.email,
+        subject: "fifth test mail",
+        text: `reset token = ${resetToken}`,
+        html: `
+        <h1>Password Reset Request</h1>
+        <p>Please click the link below to reset your password:</p>
+        <a href="http://${process.env.HOST}:${process.env.PORT}/auth/change-password?resetToken=${resetToken}">
+            Reset Password
+        </a>
+        <p>If you did not request this, please ignore this email.</p>`,
+    }
+    
+    transporter.sendMail(message, (err, info) => {
+        if(err) {
+            console.log(err);
+            console.log(`error name = ${err.name}`);
+            console.log(`error message = ${err.message}`);
+            return res.status(500).json({...err});
+        } 
+        
+        if(info) {
+            console.log(`message send, ${info.id}`);
+            return res.status(200).send("message sent");
+        }
+    });
 });
 app.post("/api/v1/auth/change-password", async (req, res, next) => {
 
