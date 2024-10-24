@@ -6,7 +6,7 @@ const { sign, verify, decode } = require("jsonwebtoken");
 const { json, urlencoded } = require("body-parser");
 const { User } = require("./models/user.model");
 const { genSalt, hash, compare } = require("bcrypt");
-const { authenticateToken, isLoggedOut } = require("./middlewares/auth.middleware");
+const { verifyAccessToken, verifyLogin, verifyAuthorization } = require("./middlewares/auth.middleware");
 const nodemailer = require("nodemailer");
 
 // Declarations
@@ -19,7 +19,7 @@ const app = express();
         if(db.connection.db.databaseName === "tweeter") {
         console.log("database connected");
         app.listen(process.env.PORT, process.env.HOST, () => {
-            console.log("server started");
+            console.log("server started listening");
         });
         } else {
             console.log("database not connected");
@@ -270,13 +270,13 @@ app.post("/api/v1/auth/forgot-password", async(req, res, next) => {
     });
 });
 app.post("/api/v1/auth/change-password", async (req, res, next) => {
-
+    
 });
-app.post("/api/v1/user/post-tweet", authenticateToken, isLoggedOut, (req, res, next) => {
+app.post("/api/v1/user/post-tweet", verifyAccessToken, verifyLogin, verifyAuthorization, (req, res, next) => {
     console.log("protected resource");
     res.send("protected resource");
 });
-app.post("api/v1/user/create-follow", authenticateToken, isLoggedOut, (req, res, next) => {
+app.post("api/v1/user/create-follow", verifyAccessToken,verifyLogin, verifyAuthorization, (req, res, next) => {
     console.log("protected resource");
     res.send("protected resource");
-})
+});
