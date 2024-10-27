@@ -35,7 +35,6 @@ function verifyAccessToken (req, res, next) {
         return res.status(500).send({error: err});
     }
 };
-
 async function verifyLogin(req, res, next) {
     // token version validation for logout check
     // extract token from request header
@@ -63,21 +62,4 @@ async function verifyLogin(req, res, next) {
     }
 }
 
-function verifyAuthorization(req, res, next) {
-    const { payload } = req.locals;
-    // authorization 
-    // role based access (RBAC)
-    // start with token authorization
-    // extracts roles
-    // if role has permission to access the route or resource then user id set in request object
-    // then route path or resource is accessible for that user id and then pass request object to next middleware
-    // else send status 403 unauthorized in server response
-    if(payload.role === "user") {
-        console.log("resource access granted");
-        next();
-    } else {
-        return res.status(403).send({message: "unauthorized"});
-        }
-    }
-
-module.exports = { verifyAccessToken, verifyLogin, verifyAuthorization };
+module.exports = { verifyAccessToken, verifyLogin };

@@ -6,8 +6,10 @@ const { sign, verify, decode } = require("jsonwebtoken");
 const { json, urlencoded } = require("body-parser");
 const { User } = require("./models/user.model");
 const { genSalt, hash, compare } = require("bcrypt");
-const { verifyAccessToken, verifyLogin, verifyAuthorization } = require("./middlewares/auth.middleware");
+const { verifyAccessToken, verifyLogin } = require("./middlewares/authenticate.middleware");
+const { verifyRole } = require("./middlewares/authorize.middleware");
 const nodemailer = require("nodemailer");
+const { roles } = require("./config/roles.config");
 
 // Declarations
 const app = express();
@@ -67,7 +69,7 @@ app.post("/api/v1/auth/register", async (req, res, next) => {
         accessToken = sign(
             {
                 id: newUser._id, 
-                role: "user",
+                role: roles.user,
                 tokenVersion: newUser.tokenVersion
             }, 
             process.env.SECRET_KEY, 
@@ -78,12 +80,14 @@ app.post("/api/v1/auth/register", async (req, res, next) => {
         refreshToken = sign(
             {
                 id: newUser._id,
-                role: "user"
+                role: roles.user,
             },
             process.env.SECRET_KEY,
             {
                 expiresIn: "2d"
             });
+
+        console.log
         res.status(200).send({message: "success", accessToken, refreshToken});
     } catch(err) {
         res.send(err);
@@ -109,7 +113,7 @@ app.post("/api/v1/auth/login", async (req, res, next) => {
                 accessToken = sign(
                     {
                         id: foundUser._id, 
-                        role: 'user',
+                        role: roles.user,
                         tokenVersion: 0 
                     }, 
                     process.env.SECRET_KEY, 
@@ -117,7 +121,7 @@ app.post("/api/v1/auth/login", async (req, res, next) => {
                 refreshToken = sign(
                     {
                         id: foundUser._id,
-                        role: 'user'
+                        role: roles.user,
                     }, 
                     process.env.SECRET_KEY, 
                     {expiresIn: "2m"});
@@ -272,11 +276,11 @@ app.post("/api/v1/auth/forgot-password", async(req, res, next) => {
 app.post("/api/v1/auth/change-password", async (req, res, next) => {
     
 });
-app.post("/api/v1/user/post-tweet", verifyAccessToken, verifyLogin, verifyAuthorization, (req, res, next) => {
+app.post("/api/v1/user/post-tweet", verifyAccessToken, verifyLogin, verifyRole, (req, res, next) => {
     console.log("protected resource");
     res.send("protected resource");
 });
-app.post("api/v1/user/create-follow", verifyAccessToken,verifyLogin, verifyAuthorization, (req, res, next) => {
+app.post("api/v1/user/create-follow", verifyAccessToken,verifyLogin, verifyRole, (req, res, next) => {
     console.log("protected resource");
     res.send("protected resource");
 });
