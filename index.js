@@ -118,7 +118,7 @@ app.post("/api/v1/auth/login", async (req, res, next) => {
                         tokenVersion: 0 
                     }, 
                     process.env.SECRET_KEY, 
-                    {expiresIn: "1m"});
+                    {expiresIn: "10m"});
                 refreshToken = sign(
                     {
                         id: foundUser._id,
