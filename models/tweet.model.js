@@ -12,6 +12,7 @@ const tweetSchema = new Schema({
     },
     likeCount: {
         type: Number,
+        default: 0
     }
 }, {
     timestamps: true,

@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const { sign, verify, decode } = require("jsonwebtoken");
 const { json, urlencoded } = require("body-parser");
 const { User } = require("./models/user.model");
+const { Tweet } = require("./models/tweet.model");
 const { genSalt, hash, compare } = require("bcrypt");
 const { verifyAccessToken, verifyLogin } = require("./middlewares/authenticate.middleware");
 const { verifyRole } = require("./middlewares/authorize.middleware");
@@ -276,9 +277,37 @@ app.post("/api/v1/auth/forgot-password", async(req, res, next) => {
 app.post("/api/v1/auth/change-password", async (req, res, next) => {
     
 });
-app.post("/api/v1/user/post-tweet", verifyAccessToken, verifyLogin, verifyRole, (req, res, next) => {
-    console.log("protected resource");
-    res.send("protected resource");
+app.post("/api/v1/user/post-tweet", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
+
+    let tweetContent = req.body.content;
+    let accessToken = req.get("authorization");
+    let tokenPayload = null;
+    let newTweet = null;
+
+    try {
+        if(accessToken.includes("Bearer")) {
+            accessToken = accessToken.split(" ")[1];
+        } else {
+            accessToken = accessToken.trim();
+        }
+    
+        tokenPayload = decode(accessToken);    
+        console.log("jwt payload = ", tokenPayload);
+
+        newTweet = new Tweet({
+            content: tweetContent,
+            author: tokenPayload.id,
+            likeCount: 0,
+        });
+
+        await newTweet.save();
+
+        res.send("protected resource");
+    } catch(err) {
+        console.log("error name = ", err.name);
+        console.log("error message = ", err.message);
+        res.status(500).send(err);
+    }
 });
 app.post("api/v1/user/create-follow", verifyAccessToken,verifyLogin, verifyRole, (req, res, next) => {
     console.log("protected resource");
