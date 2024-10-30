@@ -35,6 +35,8 @@ const app = express();
 // Middlewares
 app.use(json());
 app.use(urlencoded());
+
+// Authorization and Authentication Management
 app.post("/api/v1/auth/register", async (req, res, next) => {
     const { firstName, lastName, userName, email, password } = req.body;
     let foundUser = null;
@@ -277,7 +279,12 @@ app.post("/api/v1/auth/forgot-password", async(req, res, next) => {
 app.post("/api/v1/auth/change-password", async (req, res, next) => {
     
 });
-app.post("/api/v1/user/post-tweet", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
+
+// User Managament
+app.get("api/v1/user/view-profile");
+
+// Tweet Management
+app.post("/api/v1/tweet/post-tweet", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
 
     let tweetContent = req.body.content;
     let accessToken = req.get("authorization");
@@ -309,7 +316,21 @@ app.post("/api/v1/user/post-tweet", verifyAccessToken, verifyLogin, verifyRole, 
         res.status(500).send(err);
     }
 });
-app.post("api/v1/user/create-follow", verifyAccessToken,verifyLogin, verifyRole, (req, res, next) => {
+
+// Follow Management
+app.post("api/v1/follow/create-follow", verifyAccessToken,verifyLogin, verifyRole, (req, res, next) => {
     console.log("protected resource");
     res.send("protected resource");
 });
+
+// Search Managment
+
+// Hastags Timeline
+
+// Notification Management
+
+// Admin Management
+
+// Analytics Management
+
+// Engagement Management
