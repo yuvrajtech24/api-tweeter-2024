@@ -316,7 +316,39 @@ app.post("/api/v1/tweet/post-tweet", verifyAccessToken, verifyLogin, verifyRole,
         res.status(500).send(err);
     }
 });
+app.delete("/api/v1/tweet/delete/:id", verifyAccessToken, verifyLogin, verifyRole, async(req, res, next) => {
+    let tweetId = req.params.id;
+    let accessToken = req.get("authorization");
+    let tokenPayload = null;
+    let userId = null;
 
+    if(!tweetId) return res.status(400).send({name: "Invalid Request", message: "tweet id missing" });
+
+    if(!accessToken) return res.status(400).send({name: "Forbidden", message: "Token is invalid"});
+
+    if(accessToken.includes("Bearer")) {
+        accessToken = accessToken.split(" ")[1].trim();
+    }
+    try {
+        console.log("access Token = ", accessToken);
+        tokenPayload = decode(accessToken);
+        console.log("token payload = ", tokenPayload);
+
+        userId = tokenPayload.id;
+        
+        let deletedDoc = await Tweet.findOneAndDelete({author: userId, _id: tweetId});
+        console.log("deleted doc = ", deletedDoc);
+        res.status(200).send(deletedDoc);
+
+    } catch(err) {
+        console.log("error name = ", err.name);
+        console.log("error message = ", err.message);
+        return res.status(500).send({
+            name: err.name,
+            message: err.message
+        })
+    }
+});
 // Follow Management
 app.post("api/v1/follow/create-follow", verifyAccessToken,verifyLogin, verifyRole, (req, res, next) => {
     console.log("protected resource");
