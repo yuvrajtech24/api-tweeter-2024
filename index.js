@@ -280,11 +280,10 @@ app.post("/api/v1/auth/change-password", async (req, res, next) => {
     
 });
 
-// User Managament
-app.get("api/v1/user/view-profile");
+// User Managament 
 
 // Tweet Management
-app.post("/api/v1/tweet/post-tweet", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
+app.post("/api/v1/tweet/create", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
 
     let tweetContent = req.body.content;
     let accessToken = req.get("authorization");
@@ -309,11 +308,14 @@ app.post("/api/v1/tweet/post-tweet", verifyAccessToken, verifyLogin, verifyRole,
 
         await newTweet.save();
 
-        res.send("protected resource");
+        res.status(200).send({newTweet});
     } catch(err) {
         console.log("error name = ", err.name);
         console.log("error message = ", err.message);
-        res.status(500).send(err);
+        res.status(500).send({
+            name: err.name,
+            message: err.message
+        });
     }
 });
 
