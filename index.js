@@ -319,6 +319,58 @@ app.post("/api/v1/tweet/create", verifyAccessToken, verifyLogin, verifyRole, asy
     }
 });
 
+app.patch("/api/v1/tweet/update/:id", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
+    // extract the accessToken from request header
+    // decode the accessToken and store token payload
+    // extract and store user id from token payload
+    // extract and store tweet id from request params
+    // extract and store updated tweet content from request body
+    // find tweet using userId and tweetId
+    // if found update its content with latest tweet
+    // then return updated tweet in response
+    // else return message no user found
+    
+    let accessToken = req.get("authorization");
+    let { content } = req.body;
+    let tweetId = req.params.id;
+    let userId = null;
+    let oldTweet = null;
+
+    if(!accessToken) return res.status(400).send({
+        name: "Invalid Request",
+        message: "No authorization header"
+    })
+
+    if(!tweetId) return res.status(400).send({
+        name: "Invalid Request",
+        message: "Request params missing"
+    });
+
+    if(!content) return res.status(400).send({
+        name: "Invalid Request",
+        message: "Request body missing"
+    });
+
+    try {
+        accessToken = accessToken.split(" ")[1].trim();
+        userId = decode(accessToken);
+
+        oldTweet = await Tweet.findOneAndUpdate(
+            {_id: tweetId, author: new mongoose.Types.ObjectId(userId)}, 
+            {content}
+        );
+        return res.status(200).send(oldTweet);
+
+    } catch(err) {
+        console.log("error name = ", err.name);
+        console.log("error message = ", err.message);
+        return res.status(500).send({
+            name: err.name,
+            message: err.message
+        })
+    }
+});
+
 // Follow Management
 app.post("api/v1/follow/create-follow", verifyAccessToken,verifyLogin, verifyRole, (req, res, next) => {
     console.log("protected resource");
