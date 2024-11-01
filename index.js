@@ -318,6 +318,53 @@ app.post("/api/v1/tweet/create", verifyAccessToken, verifyLogin, verifyRole, asy
         });
     }
 });
+app.get("/api/v1/tweet/search", async (req, res, next) => {
+    // extract accessToken from request header
+    // decode accessToken
+    // extract search arguments from query parameter
+    // build the search criteria
+    // fetch tweet based on search criteria 
+
+    let accessToken = req.get("authorization");
+    let searchCriteria = {};
+    let { content } = req.query;
+    let decodedPayload = null;
+
+    try {
+        if(accessToken.includes("Bearer")) {
+            accessToken = accessToken.split(" ")[1]; 
+        } else {
+            accessToken = accessToken.trim();
+        }
+        decodedPayload = decode(accessToken);
+
+        if(content) {
+            searchCriteria.content = content;
+        }
+
+        let result = await Tweet.findOne({
+            content, 
+            author: new mongoose.Types.ObjectId(decodedPayload.id)
+        });
+
+        if(!result) return res.status(200).send({
+            name: "No result",
+            message: "Tweet not found"
+        })
+
+        console.log("found tweet = ", result);
+
+        res.status(200).send(result);
+    } catch(err) {
+        console.log("error name = ", err.name);
+        console.log("error message = ", err.message);
+        console.log(err);
+        return res.status(500).send({
+            name: err.name,
+            message: err.message
+        });
+    }
+})
 
 app.patch("/api/v1/tweet/update/:id", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
     // extract the accessToken from request header
