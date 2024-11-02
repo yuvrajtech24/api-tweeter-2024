@@ -1,6 +1,6 @@
 const rolePermissions = {
     admin: ["POST", "GET", "PUT", "PATCH", "DELETE"],
-    user: ["GET", "PUT", "PATCH", "POST"],
+    user: ["GET", "PUT", "PATCH", "POST", "DELETE"],
     guest: ["GET"],
 }
 
