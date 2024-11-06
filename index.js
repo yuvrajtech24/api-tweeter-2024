@@ -6,6 +6,7 @@ const { sign, verify, decode } = require("jsonwebtoken");
 const { json, urlencoded } = require("body-parser");
 const { User } = require("./models/user.model");
 const { Tweet } = require("./models/tweet.model");
+const { Follower } = require("./models/follower.model");
 const { genSalt, hash, compare } = require("bcrypt");
 const { verifyAccessToken, verifyLogin } = require("./middlewares/authenticate.middleware");
 const { verifyRole } = require("./middlewares/authorize.middleware");
@@ -281,6 +282,72 @@ app.post("/api/v1/auth/change-password", async (req, res, next) => {
 });
 
 // User Managament 
+app.delete("/api/v1/user/delete", async (req, res, next) => {
+
+    // Implementing cascading delete
+    // (required when multiple relationship exist)
+
+    // extract accessToken from request header
+    // decode the accessToken and extract tokenPayload
+    // then get userId from tokenPayload
+    // start a session with mongodb server
+    // start a transaction in the session
+    // run multiple delete query inside the transaction
+    // Delete user from Users Collection    
+    // Delete user from Tweets Collection
+    // Delete user from Followers Collection
+    // if no error during query processing end transaction
+    // else abort the transaction
+    // finally end the session
+
+    let accessToken = req.get("authorization");
+    let tokenPayload = null;
+    let userId = null;
+
+    if(accessToken.includes("Bearer")) {
+        accessToken = accessToken.split(" ")[1];
+    } else {
+        accessToken = accessToken.trim();
+    }
+
+    tokenPayload = decode(accessToken);
+
+    if(!tokenPayload) {
+        return res.status(400).send({
+            name: "Invalid Token",
+            message: "token is invalid"
+        });
+    }
+    userId = tokenPayload.id;
+
+    // let result = await User.findByIdAndDelete(userId);
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        await User.findByIdAndDelete(userId);
+
+        await Tweet.deleteMany({author: new mongoose.Types.ObjectId(userId)});
+
+        await Follower.deleteMany({followee: new mongoose.Types.ObjectId(userId)});
+
+        await session.commitTransaction();
+
+        res.send({
+            name: "Delete Successfull", 
+            message: "All record of user deleted"
+        });
+    } catch(err) {
+        await session.abortTransaction();
+        
+        console.log("error name = ", err.name);
+        console.log("error message = ", err.message);
+        
+        res.status(400).send(err);
+    } finally {
+        session.endSession();
+    }
+});
 
 // Tweet Management
 app.post("/api/v1/tweet/create", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
