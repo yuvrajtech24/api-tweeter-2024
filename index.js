@@ -281,7 +281,55 @@ app.post("/api/v1/auth/change-password", async (req, res, next) => {
     
 });
 
-// User Managament 
+// User Managament
+app.patch("/api/v1/user/update", async (req, res, next) => {
+    // extract data to update from request body
+    // if no payload found return error
+    // extract the accessToken from request authorization header
+    // decode the token to get token payload
+    // update the user found in token payload using data from request body 
+    let requestPayload = req.body;
+    let accessToken = null;
+    let tokenPayload = null;
+    let userId = null;
+
+    if(!requestPayload) return res.status(400).send({
+        name: "Invalid Request",
+        message: "Request content is invalid"
+    });
+
+    try {
+        accessToken = req.get("authorization");
+    
+        if(accessToken.includes("Bearer")) {
+            accessToken = accessToken.split(" ")[1];
+        } else {
+            accessToken = accessToken.trim();
+        }
+    
+        tokenPayload = decode(accessToken);
+        if(!tokenPayload || !tokenPayload.id === "" || undefined) return res.status(400).send({
+            name: "Invalid token",
+            message: "Token is invalid"
+        });
+        
+        userId = tokenPayload.id;
+
+        console.log("user id = ", userId);
+        console.log("request body = ", requestPayload);
+
+        let result = await User.findOneAndUpdate({_id: new mongoose.Types.ObjectId(userId)}, requestPayload);
+
+        result = {...result._doc, ...requestPayload};
+
+        console.log(result);
+
+        res.send(result);
+    } catch(err) {
+        console.log("err name = ", err.name);
+        console.log("err message = ", err.message);
+    }
+}); 
 app.delete("/api/v1/user/delete", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
 
     // Implementing cascading delete
