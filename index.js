@@ -282,7 +282,7 @@ app.post("/api/v1/auth/change-password", async (req, res, next) => {
 });
 
 // User Managament 
-app.delete("/api/v1/user/delete", async (req, res, next) => {
+app.delete("/api/v1/user/delete", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
 
     // Implementing cascading delete
     // (required when multiple relationship exist)
