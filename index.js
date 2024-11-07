@@ -396,6 +396,43 @@ app.delete("/api/v1/user/delete", verifyAccessToken, verifyLogin, verifyRole, as
         session.endSession();
     }
 });
+app.get("/api/v1/user/profile", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
+    // extract accessToken from request header
+    // decode accessToken and extract tokenPayload
+    // get user id from payload
+    // extract username from 
+    // search for user using id
+    // if user found return user
+    // else return no user found
+    
+    let accessToken = req.get("authorization");
+    let tokenPayload = null;
+    let userId = null;
+    let foundUser = null;
+
+    if(!accessToken) return res.status(403).send({
+        name: "Forbidden",
+        message: "Not Authorized" 
+    })
+
+    try {
+        accessToken = accessToken.includes("Bearer") ? accessToken.split(" ")[1] : accessToken.trim();
+    
+        tokenPayload = decode(accessToken);
+        if(!tokenPayload || !tokenPayload.id) return res.status(401).send({name: "Unauthorized", message: "Invalid token"});
+        userId = tokenPayload.id;
+
+        foundUser = await User.findOne({_id: new mongoose.Types.ObjectId(userId)});
+
+        if(!foundUser) return res.status(404).send({name: "Not Found", message: "User not available"});
+
+        return res.status(200).send(foundUser);
+    } catch(err) {
+        console.log("error name = ", err.name);
+        console.log("error message = ", err.message);
+        return res.status(500).send({name: err.name, message: err.message});
+    }
+});
 
 // Tweet Management
 app.post("/api/v1/tweet/create", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
@@ -479,8 +516,7 @@ app.get("/api/v1/tweet/search", async (req, res, next) => {
             message: err.message
         });
     }
-})
-
+});
 app.patch("/api/v1/tweet/update/:id", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
     // extract the accessToken from request header
     // decode the accessToken and store token payload
@@ -565,6 +601,7 @@ app.delete("/api/v1/tweet/delete/:id", verifyAccessToken, verifyLogin, verifyRol
         })
     }
 });
+
 // Follow Management
 app.post("api/v1/follow/create-follow", verifyAccessToken,verifyLogin, verifyRole, (req, res, next) => {
     console.log("protected resource");
