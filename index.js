@@ -281,7 +281,6 @@ app.post("/api/v1/auth/change-password", async (req, res, next) => {
     
 });
 
-
 // User Managament 
 app.delete("/api/v1/user/delete", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
 
@@ -349,7 +348,6 @@ app.delete("/api/v1/user/delete", verifyAccessToken, verifyLogin, verifyRole, as
         session.endSession();
     }
 });
-// User Managament
 app.get("/api/v1/user/profile", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
     // extract accessToken from request header
     // decode accessToken and extract tokenPayload
