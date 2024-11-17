@@ -603,9 +603,63 @@ app.delete("/api/v1/tweet/delete/:id", verifyAccessToken, verifyLogin, verifyRol
 });
 
 // Follow Management
-app.post("api/v1/follow/create-follow", verifyAccessToken,verifyLogin, verifyRole, (req, res, next) => {
-    console.log("protected resource");
-    res.send("protected resource");
+app.post("/api/v1/follower/add", verifyAccessToken, verifyLogin, verifyRole, async (req, res, next) => {
+    // extract the jwt token from request authorization header
+    // decode the jwt token and get jwt token payload
+    // get userId of the follower from the jwt token payload
+    // extract the followee userId and userName from request body
+    // create a new follower using follower userId and followee userId in database
+    // return success message after adding new follower
+
+    let jwtToken = null;
+    let jwtPayload = null;
+    let userIdFollower = null;
+    let userIdFollowee = null;
+
+    jwtToken = req.get("authorization");
+
+    if(!jwtToken) return res.status(400).send({
+        name: "Invalid Token",
+        message: "Token is invalid"
+    })
+
+    if(jwtToken.includes("Bearer")) {
+        jwtToken = jwtToken.split(" ")[1].trim();
+    } else {
+        jwtToken = jwtToken.trim();
+    }
+
+    jwtPayload = decode(jwtToken);
+
+    if(!jwtPayload) return res.status(400).send({
+        name: "Invalid Token",
+        message: "Token is invalid"
+    })
+
+    userIdFollower = jwtPayload.id;
+    userIdFollowee = req.body.followeeId;
+
+    try{
+        let newFollower = new Follower({
+            follower: new mongoose.Types.ObjectId(userIdFollower),
+            followee: new mongoose.Types.ObjectId(userIdFollowee),
+        });
+        
+        await newFollower.save();
+
+        res.status(200).send({
+            name: "Success",
+            message: "Following user"
+        });
+    } catch(err) {
+        console.log("error name = ", err.name);
+        console.log("error message = ", err.message);
+        res.status(403).send({
+            name: err.name,
+            message: err.message
+        });
+    }
+    
 });
 
 // Search Managment
